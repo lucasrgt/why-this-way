@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/lucasrgt/why-this-way/protocol/graph.schema.json",
+  "title": "Agent First Graph",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "nodes", "edges"],
+  "properties": {
+    "schema": { "const": 1 },
+    "nodes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["uri", "kind", "status", "title", "scopes"],
+        "properties": {
+          "uri": { "type": "string", "minLength": 1 },
+          "kind": { "type": "string", "minLength": 1 },
+          "status": { "type": "string", "minLength": 1 },
+          "title": { "type": "string", "minLength": 1 },
+          "scopes": { "type": "array", "items": { "type": "string" } }
+        }
+      }
+    },
+    "edges": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["from", "rel", "to", "basis"],
+        "properties": {
+          "from": { "type": "string", "minLength": 1 },
+          "rel": { "type": "string", "minLength": 1 },
+          "to": { "type": "string", "minLength": 1 },
+          "basis": { "type": "string", "minLength": 1 }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,4 @@
+/target
+.agent-first/wtw/config.local.toml
+.agent-first/wtw/*.sqlite*
+*.profraw
