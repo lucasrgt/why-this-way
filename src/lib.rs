@@ -656,7 +656,7 @@ fn guard_prompt(task: &str, records: &[Record], patch: &str, findings: Option<&[
         })
         .unwrap_or_else(|| "Find direct contradictions only.".into());
     Ok(format!(
-        "You are the bounded Why This Way guard. {phase} Report only changed code that directly contradicts a supplied active decision or violates a supplied invariant. A finding requires the exact record URI, changed path, line, one literal single-line substring from the patch, and reason. Code implementing the decision is not a finding. Return strict JSON {{\"findings\":[]}}.\nTASK:{task}\nRECORDS:{}\nPATCH:\n{patch}",
+        "You are the bounded Why This Way guard. {phase} Report only changed code that directly contradicts a supplied active decision or violates a supplied invariant. Every finding uses exactly these fields: record_uri, path, line, evidence, reason. record_uri is the exact supplied record URI. path is a changed path from the patch. line is the changed line number. evidence is one literal single-line substring from the patch. Code implementing the decision is not a finding. Return strict JSON {{\"findings\":[]}}.\nTASK:{task}\nRECORDS:{}\nPATCH:\n{patch}",
         serde_json::to_string(records)?
     ))
 }

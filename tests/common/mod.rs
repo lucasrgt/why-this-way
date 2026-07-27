@@ -64,7 +64,9 @@ fn main() {{
     std::io::stdin().read_to_string(&mut prompt).unwrap();
     assert!(prompt.len() <= 800_000);
     let is_guard = prompt.contains("bounded Why This Way guard");
-    if !is_guard {{
+    if is_guard {{
+        assert!(prompt.contains("Every finding uses exactly these fields: record_uri, path, line, evidence, reason."));
+    }} else {{
         assert!(prompt.contains("Every record uses exactly these fields"));
         assert!(prompt.contains("rejected_because"));
         assert!(prompt.contains("Authority uses exactly kind, source, quote"));
