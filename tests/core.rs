@@ -143,6 +143,30 @@ fn guard_uses_relevant_records_and_two_identical_judges() {
 }
 
 #[test]
+fn guard_chunks_large_diffs_and_still_finds_a_late_contradiction() {
+    let repo = Repo::initialized();
+    repo.configure_same(&linked_pair(), &[]);
+    collect(&repo.root, request()).unwrap();
+    for file in 0..5 {
+        let mut content = (0..12_000)
+            .map(|line| format!("let value_{file}_{line} = {line};\n"))
+            .collect::<String>();
+        if file == 4 {
+            content.push_str("repository.save(entity);\n");
+        }
+        repo.write(&format!("src/backend/part-{file}.rs"), &content);
+    }
+    assert!(git(&repo.root, &["ls-files", "--others", "--exclude-standard"]).contains("part-4.rs"));
+    let mut expected = finding("wtw://decision/direct-appdb");
+    expected.path = "src/backend/part-4.rs".into();
+    repo.configure_same(&[], std::slice::from_ref(&expected));
+
+    let result = guard(&repo.root, "change backend persistence", "HEAD", &[], &[], false).unwrap();
+
+    assert_eq!(result.findings, vec![expected]);
+}
+
+#[test]
 fn corrupt_storage_and_unsafe_inputs_fail_closed() {
     let repo = Repo::initialized();
     assert!(explain(&repo.root, "", &[], 12, &[]).is_err());

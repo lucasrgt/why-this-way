@@ -51,6 +51,8 @@ impl Repo {
     }
 
     pub fn configure(&self, collect_first: &[Candidate], collect_second: &[Candidate], guard_first: &[Finding], guard_second: &[Finding]) {
+        let guard_first_evidence = guard_first.first().map(|finding| finding.evidence.as_str()).unwrap_or("");
+        let guard_second_evidence = guard_second.first().map(|finding| finding.evidence.as_str()).unwrap_or("");
         let collect_first = serde_json::to_string(&Records { records: collect_first }).unwrap();
         let collect_second = serde_json::to_string(&Records { records: collect_second }).unwrap();
         let guard_first = serde_json::to_string(&Findings { findings: guard_first }).unwrap();
@@ -60,6 +62,7 @@ impl Repo {
 fn main() {{
     let mut prompt = String::new();
     std::io::stdin().read_to_string(&mut prompt).unwrap();
+    assert!(prompt.len() <= 800_000);
     let is_guard = prompt.contains("bounded Why This Way guard");
     if !is_guard {{
         assert!(prompt.contains("Every record uses exactly these fields"));
@@ -71,7 +74,9 @@ fn main() {{
         assert!(prompt.contains("full wtw://decision/<id> or wtw://invariant/<id> URI"));
     }}
     let output = if is_guard {{
-        if prompt.contains("Confirm only") {{ {guard_second:?} }} else {{ {guard_first:?} }}
+        if prompt.contains("Confirm only") {{
+            if prompt.contains({guard_second_evidence:?}) {{ {guard_second:?} }} else {{ "{{\"findings\":[]}}" }}
+        }} else if prompt.contains({guard_first_evidence:?}) {{ {guard_first:?} }} else {{ "{{\"findings\":[]}}" }}
     }} else if prompt.contains("Confirm only") {{ {collect_second:?} }} else {{ {collect_first:?} }};
     print!("{{}}", output);
 }}"#

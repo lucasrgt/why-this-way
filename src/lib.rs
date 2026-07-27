@@ -16,6 +16,7 @@ const IGNORE: &str = include_str!("../assets/gitignore");
 const INSTRUCTIONS: &str = include_str!("../assets/AGENT_INSTRUCTIONS.md");
 const START: &str = "<!-- wtw:instructions:start -->";
 const END: &str = "<!-- wtw:instructions:end -->";
+const MAX_PROMPT: usize = 800_000;
 
 #[derive(Clone, Copy, Debug, Deserialize, Serialize, PartialEq, Eq, Hash)]
 #[serde(rename_all = "snake_case")]
@@ -271,19 +272,34 @@ pub fn guard(root: &Path, task: &str, base: &str, paths: &[String], external: &[
         });
     }
     let known = context.records.iter().map(Record::uri).collect::<HashSet<_>>();
-    let first = validate_findings(
-        judge::<Audit>(&root, &guard_prompt(task, &context.records, &patch, None)?)?.findings,
-        &known,
-        &changed,
-        &patch,
-    )?;
-    let second = validate_findings(
-        judge::<Audit>(&root, &guard_prompt(task, &context.records, &patch, Some(&first))?)?.findings,
-        &known,
-        &changed,
-        &patch,
-    )?;
-    let findings = first.into_iter().filter(|item| second.contains(item)).collect();
+    let overhead = guard_prompt(task, &context.records, "", None)?.len() + 100_000;
+    let limit = MAX_PROMPT
+        .checked_sub(overhead)
+        .filter(|value| *value >= 10_000)
+        .context("WTW guard context is too large")?;
+    let mut findings = Vec::new();
+    for chunk in patch_chunks(&patch, limit)? {
+        let first = validate_findings(
+            judge::<Audit>(&root, &guard_prompt(task, &context.records, &chunk, None)?)?.findings,
+            &known,
+            &changed,
+            &chunk,
+        )?;
+        let second = validate_findings(
+            judge::<Audit>(&root, &guard_prompt(task, &context.records, &chunk, Some(&first))?)?.findings,
+            &known,
+            &changed,
+            &chunk,
+        )?;
+        for finding in first.into_iter().filter(|item| second.contains(item)) {
+            if !findings.contains(&finding) {
+                findings.push(finding);
+            }
+        }
+        if findings.len() > 24 {
+            bail!("judge returned too many findings")
+        }
+    }
     Ok(GuardResult {
         records_checked: context.records.len(),
         findings,
@@ -507,43 +523,27 @@ fn validate_findings(items: Vec<Finding>, known: &HashSet<String>, paths: &[Stri
     Ok(output)
 }
 
+#[rustfmt::skip]
 fn materialize(root: &Path, candidate: Candidate) -> Result<Record> {
     Ok(Record {
-        schema: 1,
-        id: candidate.id,
-        kind: candidate.kind,
-        status: RecordStatus::Active,
-        title: candidate.title,
-        statement: candidate.statement,
-        rationale: candidate.rationale,
-        alternatives: candidate.alternatives,
-        violation: candidate.violation,
-        scopes: candidate.scopes,
-        authority: candidate.authority,
-        evidence: candidate.evidence,
-        links: candidate.links,
+        schema: 1, id: candidate.id, kind: candidate.kind, status: RecordStatus::Active,
+        title: candidate.title, statement: candidate.statement, rationale: candidate.rationale,
+        alternatives: candidate.alternatives, violation: candidate.violation, scopes: candidate.scopes,
+        authority: candidate.authority, evidence: candidate.evidence, links: candidate.links,
         recorded_at: Utc::now(),
-        recorded_by: git(root, &["config", "user.name"])
-            .unwrap_or_else(|_| "unknown".into())
-            .trim()
-            .into(),
+        recorded_by: git(root, &["config", "user.name"]).unwrap_or_else(|_| "unknown".into()).trim().into(),
         recorded_commit: git(root, &["rev-parse", "HEAD"])?.trim().into(),
     })
 }
 
+#[rustfmt::skip]
 fn semantic(record: &Record) -> Candidate {
     Candidate {
-        id: record.id.clone(),
-        kind: record.kind,
-        title: record.title.clone(),
-        statement: record.statement.clone(),
-        rationale: record.rationale.clone(),
-        alternatives: record.alternatives.clone(),
-        violation: record.violation.clone(),
-        scopes: record.scopes.clone(),
-        authority: record.authority.clone(),
-        evidence: record.evidence.clone(),
-        links: record.links.clone(),
+        id: record.id.clone(), kind: record.kind, title: record.title.clone(),
+        statement: record.statement.clone(), rationale: record.rationale.clone(),
+        alternatives: record.alternatives.clone(), violation: record.violation.clone(),
+        scopes: record.scopes.clone(), authority: record.authority.clone(),
+        evidence: record.evidence.clone(), links: record.links.clone(),
     }
 }
 
@@ -662,6 +662,9 @@ fn guard_prompt(task: &str, records: &[Record], patch: &str, findings: Option<&[
 }
 
 fn judge<T: serde::de::DeserializeOwned>(root: &Path, prompt: &str) -> Result<T> {
+    if prompt.len() > MAX_PROMPT {
+        bail!("judge prompt exceeds the safe WTW envelope")
+    }
     let config = load_config(root)?;
     if config.schema != 1 || config.judge.command.is_empty() {
         bail!("unsupported or empty judge configuration")
@@ -777,6 +780,29 @@ fn diff(root: &Path, base: &str) -> Result<String> {
     Ok(value)
 }
 
+#[rustfmt::skip]
+fn patch_chunks(patch: &str, limit: usize) -> Result<Vec<String>> {
+    let (mut output, mut chunk, mut file, mut hunk) = (Vec::new(), String::new(), String::new(), String::new());
+    for line in patch.split_inclusive('\n') {
+        let starts_file = line.starts_with("diff --git "); let starts_hunk = line.starts_with("@@ ");
+        if starts_file {
+            file = line.into(); hunk.clear();
+        } else if starts_hunk { hunk = line.into();
+        }
+        if chunk.len() + line.len() > limit {
+            if !chunk.is_empty() { output.push(std::mem::take(&mut chunk)); }
+            if !starts_file {
+                chunk.push_str(&file);
+                if !starts_hunk { chunk.push_str(&hunk); }
+            }
+        }
+        if chunk.len() + line.len() > limit { bail!("one diff line exceeds the safe WTW judge envelope") }
+        chunk.push_str(line);
+    }
+    if !chunk.is_empty() { output.push(chunk); }
+    Ok(output)
+}
+
 fn git(root: &Path, args: &[&str]) -> Result<String> {
     let output = Command::new("git")
         .args(["-c", "core.quotePath=false"])
@@ -825,12 +851,8 @@ fn relation_name(rel: Relation) -> &'static str {
         Relation::Supersedes => "supersedes",
     }
 }
-fn issue(code: &str, message: String) -> HealthIssue {
-    HealthIssue {
-        code: code.into(),
-        message,
-    }
-}
+#[rustfmt::skip]
+fn issue(code: &str, message: String) -> HealthIssue { HealthIssue { code: code.into(), message } }
 fn valid_id(id: &str) -> Result<()> {
     if id.len() < 3
         || id.len() > 80
@@ -953,32 +975,14 @@ struct QueryArgs {#[arg(long)]task:String,#[arg(long)]path:Vec<String>,#[arg(lon
 #[rustfmt::skip]
 struct GuardArgs {#[arg(long)]task:String,#[arg(long,default_value="HEAD")]base:String,#[arg(long)]path:Vec<String>,#[arg(long)]graph:Vec<PathBuf>,#[arg(long)]suite:bool,#[arg(long)]json:bool}
 #[derive(Args)]
-struct ShowArgs {
-    #[arg(long)]
-    id: String,
-    #[arg(long)]
-    json: bool,
-}
+#[rustfmt::skip]
+struct ShowArgs { #[arg(long)] id: String, #[arg(long)] json: bool }
 #[derive(Args)]
-struct HealthArgs {
-    #[arg(long)]
-    graph: Vec<PathBuf>,
-    #[arg(long)]
-    suite: bool,
-    #[arg(long)]
-    json: bool,
-}
+#[rustfmt::skip]
+struct HealthArgs { #[arg(long)] graph: Vec<PathBuf>, #[arg(long)] suite: bool, #[arg(long)] json: bool }
 #[derive(Args)]
-struct SupersedeArgs {
-    #[arg(long)]
-    id: String,
-    #[arg(long)]
-    by: String,
-    #[arg(long)]
-    basis: String,
-    #[arg(long)]
-    json: bool,
-}
+#[rustfmt::skip]
+struct SupersedeArgs { #[arg(long)] id: String, #[arg(long)] by: String, #[arg(long)] basis: String, #[arg(long)] json: bool }
 
 pub fn run_cli_env() -> Result<i32> {
     let current = std::env::current_dir()?;

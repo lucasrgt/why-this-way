@@ -59,6 +59,10 @@ Audit the final diff:
 wtw guard --task "implemented idempotent capture"
 ```
 
+Large diffs are partitioned into bounded, path-aware envelopes. Every envelope
+receives the same isolated two-pass review, so repository size does not require
+weakening the gate or exceeding the judge's context limit.
+
 Inspect repository governance:
 
 ```bash
