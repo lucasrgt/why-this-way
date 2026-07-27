@@ -60,7 +60,17 @@ impl Repo {
 fn main() {{
     let mut prompt = String::new();
     std::io::stdin().read_to_string(&mut prompt).unwrap();
-    let output = if prompt.contains("bounded Why This Way guard") {{
+    let is_guard = prompt.contains("bounded Why This Way guard");
+    if !is_guard {{
+        assert!(prompt.contains("Every record uses exactly these fields"));
+        assert!(prompt.contains("rejected_because"));
+        assert!(prompt.contains("Authority uses exactly kind, source, quote"));
+        assert!(prompt.contains("source must be an exact top-level key from SOURCES"));
+        assert!(prompt.contains("Evidence is an array of literal strings"));
+        assert!(prompt.contains("Link entries use exactly rel, to, basis"));
+        assert!(prompt.contains("full wtw://decision/<id> or wtw://invariant/<id> URI"));
+    }}
+    let output = if is_guard {{
         if prompt.contains("Confirm only") {{ {guard_second:?} }} else {{ {guard_first:?} }}
     }} else if prompt.contains("Confirm only") {{ {collect_second:?} }} else {{ {collect_first:?} }};
     print!("{{}}", output);
@@ -100,7 +110,7 @@ fn main() {{
 pub fn source() -> Source {
     Source {
         name: "docs/architecture.md".into(),
-        content: "We choose direct AppDb access because repository abstractions obscure slice ownership. The repository-per-entity alternative was explicitly rejected. Each module writes only its own entities; a cross-module write is invalid.".into(),
+        content: "We choose direct\nAppDb access because repository abstractions obscure\nslice ownership. The repository-per-entity alternative was explicitly rejected. Each module writes only its own entities; a cross-module write is invalid.".into(),
     }
 }
 

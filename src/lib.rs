@@ -404,7 +404,7 @@ fn validate_candidates(items: Vec<Candidate>, sources: &BTreeMap<String, String>
     if items.len() > 24 {
         bail!("judge returned too many records")
     }
-    let envelope = sources.values().map(String::as_str).collect::<Vec<_>>().join("\n").to_lowercase();
+    let envelope = comparable(&sources.values().map(String::as_str).collect::<Vec<_>>().join("\n"));
     let mut output = Vec::new();
     for mut item in items {
         valid_id(&item.id)?;
@@ -419,7 +419,7 @@ fn validate_candidates(items: Vec<Candidate>, sources: &BTreeMap<String, String>
         let source = sources
             .get(&item.authority.source)
             .context("judge referenced unknown authority source")?;
-        if !source.to_lowercase().contains(&item.authority.quote.to_lowercase()) {
+        if !comparable(source).contains(&comparable(&item.authority.quote)) {
             bail!("authority quote is not literal evidence")
         }
         item.scopes = normalized(item.scopes);
@@ -432,7 +432,7 @@ fn validate_candidates(items: Vec<Candidate>, sources: &BTreeMap<String, String>
         for scope in &item.scopes {
             Pattern::new(scope).with_context(|| format!("invalid scope {scope}"))?;
         }
-        if item.evidence.iter().any(|e| e.len() < 8 || !envelope.contains(&e.to_lowercase())) {
+        if item.evidence.iter().any(|e| e.len() < 8 || !envelope.contains(&comparable(e))) {
             bail!("judge returned invented evidence")
         }
         match item.kind {
@@ -642,7 +642,7 @@ fn collect_prompt(envelope: &str, candidates: Option<&[Candidate]>) -> Result<St
         })
         .unwrap_or_else(|| "Extract durable decisions and invariants.".into());
     Ok(format!(
-        "You are the bounded Why This Way collector. {phase} A decision requires a durable explicit choice, rationale, at least one rejected alternative, reusable glob scopes, an authority source key and literal quote, and two literal evidence fragments. An invariant requires a durable falsifiable truth, concrete violation, scopes, authority, and evidence; it has no alternatives. Authority kinds are human_statement, accepted_plan, adr, policy, contract, or merged_change. Reject implementation descriptions, preferences, hypothetical ideas, unfinished work, errors, examples, and acceptance tests. IDs are lowercase semantic slugs. Allowed links are establishes/upholds from a decision to an invariant and supersedes between equal kinds; every link needs a basis. Return strict JSON {{\"records\":[]}}.\nSOURCES:\n{envelope}"
+        "You are the bounded Why This Way collector. {phase} Every record uses exactly these fields: id, kind, title, statement, rationale, alternatives, violation, scopes, authority, evidence, links. Alternative entries use exactly statement and rejected_because. Authority uses exactly kind, source, quote; source must be an exact top-level key from SOURCES such as task, diff, or a supplied source key, never a path merely mentioned inside a source. Evidence is an array of literal strings. Link entries use exactly rel, to, basis, and to must be a full wtw://decision/<id> or wtw://invariant/<id> URI. A decision requires a durable explicit choice in statement, a nonempty rationale, at least one rejected alternative, reusable glob scopes, an authority source key and literal quote, and two literal evidence fragments; violation is empty. An invariant requires a durable falsifiable truth in statement, a concrete violation, scopes, authority, and evidence; rationale is empty and alternatives is empty. Authority kinds are human_statement, accepted_plan, adr, policy, contract, or merged_change. Reject implementation descriptions, preferences, hypothetical ideas, unfinished work, errors, examples, and acceptance tests. IDs are lowercase semantic slugs. Allowed links are establishes/upholds from a decision to an invariant and supersedes between equal kinds; every link needs a basis. Return strict JSON {{\"records\":[]}}.\nSOURCES:\n{envelope}"
     ))
 }
 
@@ -852,6 +852,9 @@ fn require_text(name: &str, value: &str) -> Result<()> {
         bail!("{name} must not be empty")
     }
     Ok(())
+}
+fn comparable(value: &str) -> String {
+    value.split_whitespace().collect::<Vec<_>>().join(" ").to_lowercase()
 }
 fn normalized(values: Vec<String>) -> Vec<String> {
     let mut v = values

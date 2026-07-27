@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.2
+
+- Align the bounded collector prompt with the strict candidate JSON schema.
+- Ground literal evidence across harmless source line wrapping and CRLF changes.
+- Require full WTW URIs for judge-produced graph links.
+- Restrict authority references to real top-level collection source keys.
+
 ## 0.1.1
 
 - Check out the tagged repository before creating the GitHub release.
