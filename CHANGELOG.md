@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.1
+
+- Check out the tagged repository before creating the GitHub release.
+
 ## 0.1.0
 
 - Add evidence-bounded `decision` and `invariant` collection with two isolated
