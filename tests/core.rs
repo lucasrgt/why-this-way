@@ -256,7 +256,7 @@ fn graph_health_reports_dangling_empty_and_supports_every_suite_relation() {
                 scopes: vec![],
             },
             GraphNode {
-                uri: "wmw://deferment/migrate".into(),
+                uri: "nwc://deferment/migrate".into(),
                 kind: "deferment".into(),
                 status: "active".into(),
                 title: "Migration".into(),
@@ -277,7 +277,7 @@ fn graph_health_reports_dangling_empty_and_supports_every_suite_relation() {
                 basis: "Historical violation".into(),
             },
             GraphEdge {
-                from: "wmw://deferment/migrate".into(),
+                from: "nwc://deferment/migrate".into(),
                 rel: "tracks_blocker_for".into(),
                 to: "wtw://decision/direct-appdb".into(),
                 basis: "Blocked migration".into(),

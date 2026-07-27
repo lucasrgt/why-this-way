@@ -88,7 +88,7 @@ their active-voice edges:
 AVP proof     --proves---------------> WTW invariant
 RTW example   --exemplifies----------> WTW decision or invariant
 NYA scar      --records_violation_of--> WTW invariant
-WMW deferment --tracks_blocker_for----> WTW decision
+NWC deferment --tracks_blocker_for----> WTW decision
 ```
 
 Inverse views such as `proved_by` are derived, never persisted twice.
@@ -98,7 +98,7 @@ active invariant to have an inbound proof from an active `proof` node.
 ## Product boundaries
 
 WTW does not preserve implementation examples, historical corrections,
-acceptance criteria, or future deferments. RTW, NYA, AVP, and WMW own those
+acceptance criteria, or future deferments. RTW, NYA, AVP, and NWC own those
 records. WTW understands their graph vocabulary without importing their
 runtimes.
 

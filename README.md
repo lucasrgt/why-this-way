@@ -8,7 +8,7 @@ WTW: what governs this change, and why?
 RTW: how is this implemented correctly here?
 NYA: which corrected failure must not recur?
 AVP: how is the behavior proved?
-WMW: which blocked intention must wake later?
+NWC: which previously blocked action can proceed now?
 ```
 
 WTW is local-first, Git-native, provider-independent, and usable as a CLI,
