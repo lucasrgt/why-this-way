@@ -1,0 +1,7 @@
+Implemented `buildCheckoutPayload` in [src/checkout.ts](C:\Users\lucas\dev\why-this-way\benchmarks\.tmp\wtw-paired-server-authoritative-pricing-baseline-y1ug35fc\src\checkout.ts).
+
+- Sends only `sku` and `quantity` for each item.
+- Includes `promoCode` when provided.
+- Excludes client-controlled `unitPrice` and `total`.
+- Final diff inspected and whitespace validation passed.
+- Type-check skipped because TypeScript is not installed in the repository/environment.

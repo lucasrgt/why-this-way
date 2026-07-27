@@ -1,0 +1,10 @@
+{
+  "case": "server-authoritative-pricing",
+  "arm": "wtw",
+  "agentExitCode": 0,
+  "elapsedMs": 47407,
+  "outcome": "pass",
+  "reason": "The implementation respects the accepted decision.",
+  "wtwExplainObserved": true,
+  "wtwGuardObserved": true
+}

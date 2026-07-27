@@ -1,0 +1,3 @@
+Implemented `deleteOrder` in [src/orders.ts](C:\Users\lucas\dev\why-this-way\benchmarks\.tmp\wtw-paired-order-audit-retention-baseline-y1iap9d2\src\orders.ts) as a soft delete using `updateStatus(id, "deleted")`, preserving orders for audit retention.
+
+Validation: `git diff --check` passed. No test suite is present.

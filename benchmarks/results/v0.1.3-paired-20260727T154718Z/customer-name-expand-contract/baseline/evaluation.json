@@ -1,0 +1,10 @@
+{
+  "case": "customer-name-expand-contract",
+  "arm": "baseline",
+  "agentExitCode": 0,
+  "elapsedMs": 23171,
+  "outcome": "contradiction",
+  "reason": "Changed code contains the forbidden decision pattern: rename column",
+  "wtwExplainObserved": false,
+  "wtwGuardObserved": false
+}

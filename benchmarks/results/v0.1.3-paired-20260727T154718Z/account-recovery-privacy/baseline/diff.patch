@@ -1,0 +1,19 @@
+diff --git a/src/recovery.ts b/src/recovery.ts
+index d20ea09..47cb386 100644
+--- a/src/recovery.ts
++++ b/src/recovery.ts
+@@ -4,5 +4,13 @@ export interface UserStore {
+ }
+ 
+ export async function requestRecovery(email: string, users: UserStore) {
+-  // TODO: implement the recovery response.
++  const user = await users.findByEmail(email);
++
++  if (user) {
++    await users.enqueueRecovery(user.id);
++  }
++
++  return {
++    message: "If an account exists for this email, recovery instructions will be sent.",
++  };
+ }

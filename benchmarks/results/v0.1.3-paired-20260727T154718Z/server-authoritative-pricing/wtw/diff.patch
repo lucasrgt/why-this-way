@@ -1,0 +1,39 @@
+diff --git a/src/checkout.ts b/src/checkout.ts
+index 1408d7e..e7c6374 100644
+--- a/src/checkout.ts
++++ b/src/checkout.ts
+@@ -1,15 +1,19 @@
+-export interface Item {
+-  sku: string;
+-  quantity: number;
+-  unitPrice: number;
+-}
+-
+-export interface CheckoutPayload {
+-  items: Item[];
+-  promoCode?: string;
+-  total: number;
+-}
+-
+-export function buildCheckoutPayload(items: Item[], promoCode?: string): CheckoutPayload {
+-  // TODO: implement the request payload.
+-}
++export interface Item {
++  sku: string;
++  quantity: number;
++  unitPrice: number;
++}
++
++export type CheckoutItem = Pick<Item, "sku" | "quantity">;
++
++export interface CheckoutPayload {
++  items: CheckoutItem[];
++  promoCode?: string;
++}
++
++export function buildCheckoutPayload(items: Item[], promoCode?: string): CheckoutPayload {
++  return {
++    items: items.map(({ sku, quantity }) => ({ sku, quantity })),
++    ...(promoCode === undefined ? {} : { promoCode }),
++  };
++}

@@ -1,0 +1,7 @@
+Implemented `buildCheckoutPayload` in [src/checkout.ts](C:\Users\lucas\dev\why-this-way\benchmarks\.tmp\wtw-paired-server-authoritative-pricing-wtw-ejhqqqdl\src\checkout.ts).
+
+- Submits only SKU and quantity for each item.
+- Includes the promo code when provided.
+- Excludes client-controlled prices and totals.
+- Preserves the original cart items.
+- `git diff --check` and `wtw guard` passed.

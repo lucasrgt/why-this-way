@@ -1,0 +1,16 @@
+export interface UserStore {
+  findByEmail(email: string): Promise<{ id: string } | null>;
+  enqueueRecovery(userId: string): Promise<void>;
+}
+
+export async function requestRecovery(email: string, users: UserStore) {
+  const user = await users.findByEmail(email);
+
+  if (user) {
+    await users.enqueueRecovery(user.id);
+  }
+
+  return {
+    message: "If an account exists for this email, recovery instructions will be sent.",
+  };
+}

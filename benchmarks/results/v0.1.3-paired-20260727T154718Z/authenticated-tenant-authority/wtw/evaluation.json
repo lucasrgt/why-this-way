@@ -1,0 +1,10 @@
+{
+  "case": "authenticated-tenant-authority",
+  "arm": "wtw",
+  "agentExitCode": 0,
+  "elapsedMs": 29401,
+  "outcome": "pass",
+  "reason": "The implementation respects the accepted decision.",
+  "wtwExplainObserved": true,
+  "wtwGuardObserved": true
+}

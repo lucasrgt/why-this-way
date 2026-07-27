@@ -1,0 +1,9 @@
+Implemented `getReport` in [src/reports.ts](C:\Users\lucas\dev\why-this-way\benchmarks\.tmp\wtw-paired-authenticated-tenant-authority-wtw-k4zle3q4\src\reports.ts:10).
+
+It now loads the report using only `request.auth.tenantId`, preserving the authenticated tenant invariant.
+
+Validation:
+
+- `git diff --check` passed
+- `wtw guard` passed
+- TypeScript compiler was unavailable locally, so compilation was skipped

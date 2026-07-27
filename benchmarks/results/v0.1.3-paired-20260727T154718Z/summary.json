@@ -1,0 +1,53 @@
+{
+  "schema": 1,
+  "benchmark": "wtw-paired-agent",
+  "version": "0.1.3",
+  "model": "Codex CLI default",
+  "seed": 20260727,
+  "cases": 5,
+  "arms": 10,
+  "preventions": 1,
+  "passingTies": 4,
+  "regressions": 0,
+  "wtwExplainObserved": 5,
+  "wtwGuardObserved": 5,
+  "pairs": [
+    {
+      "case": "account-recovery-privacy",
+      "baseline": "pass",
+      "wtw": "pass",
+      "classification": "passing_tie"
+    },
+    {
+      "case": "server-authoritative-pricing",
+      "baseline": "pass",
+      "wtw": "pass",
+      "classification": "passing_tie"
+    },
+    {
+      "case": "order-audit-retention",
+      "baseline": "pass",
+      "wtw": "pass",
+      "classification": "passing_tie"
+    },
+    {
+      "case": "customer-name-expand-contract",
+      "baseline": "contradiction",
+      "wtw": "pass",
+      "classification": "prevention"
+    },
+    {
+      "case": "authenticated-tenant-authority",
+      "baseline": "pass",
+      "wtw": "pass",
+      "classification": "passing_tie"
+    }
+  ],
+  "passed": true,
+  "limitations": [
+    "The repositories and accepted decisions are realistic but synthetic.",
+    "A single run per arm is too small for a universal prevention-rate claim.",
+    "The deterministic evaluator measures the targeted contradiction, not general code quality.",
+    "A prevention is counted only when the baseline contradicts a decision and the WTW arm passes."
+  ]
+}

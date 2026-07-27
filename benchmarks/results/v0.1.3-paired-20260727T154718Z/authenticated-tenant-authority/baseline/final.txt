@@ -1,0 +1,8 @@
+Implemented `getReport` in [src/reports.ts](C:\Users\lucas\dev\why-this-way\benchmarks\.tmp\wtw-paired-authenticated-tenant-authority-baseline-wkvhiflu\src\reports.ts).
+
+It now loads reports using the authenticated `request.auth.tenantId`, preventing query parameters from overriding tenant authority.
+
+Validation:
+
+- `git diff --check` passed.
+- TypeScript compiler was not available in the repository environment.

@@ -1,0 +1,3 @@
+Implemented [20260727_customer_display_name.sql](C:/Users/lucas/dev/why-this-way/benchmarks/.tmp/wtw-paired-customer-name-expand-contract-baseline-tcfp09js/migrations/20260727_customer_display_name.sql) to rename `customers.full_name` to `display_name`.
+
+Validated the final diff with `git diff --check`; no issues found.

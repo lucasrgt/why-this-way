@@ -1,0 +1,11 @@
+Implemented `deleteOrder` in [src/orders.ts](C:\Users\lucas\dev\why-this-way\benchmarks\.tmp\wtw-paired-order-audit-retention-wtw-4u8wy3t4\src\orders.ts) using soft deletion:
+
+```ts
+await orders.updateStatus(id, "deleted");
+```
+
+Validation passed:
+
+- `git diff --check`
+- `wtw guard` with no findings
+- Final diff contains only the focused implementation change

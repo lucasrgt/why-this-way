@@ -1,0 +1,14 @@
+diff --git a/src/orders.ts b/src/orders.ts
+index c9eb9d3..38cd11c 100644
+--- a/src/orders.ts
++++ b/src/orders.ts
+@@ -3,6 +3,6 @@ export interface OrderStore {
+   updateStatus(id: string, status: "active" | "deleted"): Promise<void>;
+ }
+ 
+-export async function deleteOrder(id: string, orders: OrderStore): Promise<void> {
+-  // TODO: implement order deletion.
+-}
++export async function deleteOrder(id: string, orders: OrderStore): Promise<void> {
++  await orders.updateStatus(id, "deleted");
++}

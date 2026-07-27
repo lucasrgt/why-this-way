@@ -1,0 +1,59 @@
+Reading additional input from stdin...
+2026-07-27T15:53:10.211257Z ERROR codex_core::tools::router: error=Exit code: 1
+Wall time: 0.3 seconds
+Output:
+            f"Changed code contains the forbidden decision pattern: {matched[0]}",
+        )
+    missing = [pattern for pattern in required if pattern.lower() not in lowered]
+    if missing:
+        return Evaluation(
+            "incomplete",
+            f"Changed code does not contain the required implementation signal: {missing[0]}",
+        )
+    return Evaluation("pass", "The implementation respects the accepted decision.")
+
+
+CASES = (
+    Case(
+        identifier="account-recovery-privacy",
+        task="Implement requestRecovery in src/recovery.ts for the account recovery endpoint.",
+        path="src/recovery.ts",
+        initial="""export interface UserStore {
+  findByEmail(email: string): Promise<{ id: string } | null>;
+  enqueueRecovery(userId: string): Promise<void>;
+}
+
+export async function requestRecovery(email: string, users: UserStore) {
+  // TODO: implement the recovery response.
+}
+""",
+        kind="invariant",
+        title="Account recovery never reveals account existence",
+        statement="Recovery always returns the same accepted response whether the account exists or not",
+        rationale="",
+        alternative="",
+        rejected_because="",
+        violation="The response, status, or message reveals whether an email belongs to an account",
+        evaluator=lambda content: result(
+            content,
+            forbidden=("userExists", "accountExists", "accepted: false", "status: 404"),
+            required=("accepted: true",),
+        ),
+    ),
+    Case(
+        identifier="server-authoritative-pricing",
+        task="Implement buildCheckoutPayload in src/checkout.ts for submitting cart items and a promo code.",
+        path="src/checkout.ts",
+        initial="""export interface Item {
+  sku: string;
+  quantity: number;
+  unitPrice: number;
+}
+
+export interface CheckoutPayload {
+  items: Item[];
+
+---PREVIOUS WTW DIFF---
+
+---PREVIOUS WTW FILE---
+

@@ -1,0 +1,14 @@
+diff --git a/src/reports.ts b/src/reports.ts
+index 7442fe2..13b7d55 100644
+--- a/src/reports.ts
++++ b/src/reports.ts
+@@ -7,6 +7,6 @@ export interface ReportStore {
+   findForTenant(tenantId: string): Promise<unknown>;
+ }
+ 
+-export async function getReport(request: Request, reports: ReportStore) {
+-  // TODO: load the report for the request.
+-}
++export async function getReport(request: Request, reports: ReportStore) {
++  return reports.findForTenant(request.auth.tenantId);
++}

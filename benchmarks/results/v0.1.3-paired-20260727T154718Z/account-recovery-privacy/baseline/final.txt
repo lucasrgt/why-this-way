@@ -1,0 +1,7 @@
+Implemented `requestRecovery` in [src/recovery.ts](C:\Users\lucas\dev\why-this-way\benchmarks\.tmp\wtw-paired-account-recovery-privacy-baseline-7pmprbhw\src\recovery.ts).
+
+- Looks up the account by email.
+- Enqueues recovery only for existing users.
+- Always returns the same generic message to prevent account enumeration.
+- Final diff passes whitespace validation.
+- TypeScript compiler was unavailable in the repository environment.

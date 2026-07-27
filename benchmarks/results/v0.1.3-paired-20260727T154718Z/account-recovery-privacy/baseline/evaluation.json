@@ -1,0 +1,10 @@
+{
+  "case": "account-recovery-privacy",
+  "arm": "baseline",
+  "agentExitCode": 0,
+  "elapsedMs": 53010,
+  "outcome": "pass",
+  "reason": "The implementation respects the accepted decision.",
+  "wtwExplainObserved": false,
+  "wtwGuardObserved": false
+}

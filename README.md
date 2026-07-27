@@ -79,6 +79,50 @@ wtw health --suite --graph avp-graph.json --graph rtw-graph.json
 
 Suite mode fails while any active invariant lacks an inbound active AVP proof.
 
+## Measured evidence
+
+WTW publishes paired agent evidence and deterministic large-corpus stress
+results. The two measurements answer different questions and are not combined
+into one prevention-rate claim.
+
+### Paired agent benchmark
+
+Five focused coding tasks were each run once without WTW and once with one
+relevant, versioned WTW record. Arm order was randomized and the resulting code
+was classified by deterministic evaluators outside the agent.
+
+| Measurement | Result |
+| --- | ---: |
+| Proven preventions | 1 |
+| Passing ties | 4 |
+| Incomplete baseline arms | 0 |
+| Regressions | 0 |
+| WTW arms passing | 5 of 5 |
+| `wtw explain` observed | 5 of 5 |
+| `wtw guard` observed | 5 of 5 |
+
+A prevention is counted only when the baseline contradicts the accepted
+decision and the WTW arm passes. A baseline that already passes is a passing
+tie, not a prevention.
+
+### Large-corpus stress
+
+| Records | Exact retrieval | Ranked first | False positive retrievals | Guard | Explain p95 |
+| ---: | ---: | ---: | ---: | ---: | ---: |
+| 1,024 | 64 of 64 | 64 of 64 | 0 | pass | 209.81 ms |
+| 10,000 | 64 of 64 | 64 of 64 | 0 | pass | 1,001.49 ms |
+
+Both corpora exported every record, passed graph health, kept retrieval bounded
+to the requested limit, distinguished a contradicting diff from a compliant
+one, and rejected corrupt storage. Timings are from one Windows development
+machine and are not portable performance guarantees. The first cold export of
+the 10,000-file corpus took 53.96 seconds; normal explain calls remained close
+to one second at p95.
+
+The repositories and stress corpus are realistic but synthetic. The paired
+sample is deliberately too small for a universal prevention-rate claim. Read
+the [protocol, raw artifacts, and machine-readable results](benchmarks/README.md).
+
 ## Records
 
 A decision:
@@ -139,5 +183,13 @@ cargo xtask verify
 
 The gate runs formatting, Clippy, the production line budget, all tests, and
 95% line coverage.
+
+Run the published benchmarks separately:
+
+```bash
+cargo build --release --locked
+python benchmarks/stress.py
+python benchmarks/paired.py --model <model>
+```
 
 Licensed under MIT.

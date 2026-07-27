@@ -1,0 +1,8 @@
+export interface OrderStore {
+  deleteById(id: string): Promise<void>;
+  updateStatus(id: string, status: "active" | "deleted"): Promise<void>;
+}
+
+export async function deleteOrder(id: string, orders: OrderStore): Promise<void> {
+  await orders.updateStatus(id, "deleted");
+}

@@ -1,0 +1,11 @@
+diff --git a/migrations/20260727_customer_display_name.sql b/migrations/20260727_customer_display_name.sql
+index a8bf406..b4e59b9 100644
+--- a/migrations/20260727_customer_display_name.sql
++++ b/migrations/20260727_customer_display_name.sql
+@@ -1 +1,5 @@
+--- TODO: migrate customers.full_name to customers.display_name.
++ALTER TABLE customers
++    ADD COLUMN display_name TEXT;
++
++UPDATE customers
++SET display_name = full_name;

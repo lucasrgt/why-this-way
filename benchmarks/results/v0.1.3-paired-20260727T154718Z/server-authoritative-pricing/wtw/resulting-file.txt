@@ -1,0 +1,19 @@
+export interface Item {
+  sku: string;
+  quantity: number;
+  unitPrice: number;
+}
+
+export type CheckoutItem = Pick<Item, "sku" | "quantity">;
+
+export interface CheckoutPayload {
+  items: CheckoutItem[];
+  promoCode?: string;
+}
+
+export function buildCheckoutPayload(items: Item[], promoCode?: string): CheckoutPayload {
+  return {
+    items: items.map(({ sku, quantity }) => ({ sku, quantity })),
+    ...(promoCode === undefined ? {} : { promoCode }),
+  };
+}

@@ -1,0 +1,7 @@
+Implemented `requestRecovery` in [src/recovery.ts](C:/Users/lucas/dev/why-this-way/benchmarks/.tmp/wtw-paired-account-recovery-privacy-wtw-ervav9a8/src/recovery.ts:6).
+
+- Enqueues recovery only for existing users.
+- Always returns `{ accepted: true }`, preventing account enumeration.
+- `git diff --check` passed.
+- `wtw guard` passed.
+- TypeScript compiler was unavailable, so compilation was skipped.

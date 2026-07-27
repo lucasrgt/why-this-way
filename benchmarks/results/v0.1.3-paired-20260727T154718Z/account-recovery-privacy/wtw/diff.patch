@@ -1,0 +1,20 @@
+diff --git a/src/recovery.ts b/src/recovery.ts
+index d20ea09..c126767 100644
+--- a/src/recovery.ts
++++ b/src/recovery.ts
+@@ -3,6 +3,12 @@ export interface UserStore {
+   enqueueRecovery(userId: string): Promise<void>;
+ }
+ 
+-export async function requestRecovery(email: string, users: UserStore) {
+-  // TODO: implement the recovery response.
+-}
++export async function requestRecovery(email: string, users: UserStore) {
++  const user = await users.findByEmail(email);
++
++  if (user) {
++    await users.enqueueRecovery(user.id);
++  }
++
++  return { accepted: true };
++}

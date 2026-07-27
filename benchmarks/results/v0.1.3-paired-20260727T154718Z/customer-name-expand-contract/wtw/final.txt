@@ -1,0 +1,9 @@
+Implemented [20260727_customer_display_name.sql](C:/Users/lucas/dev/why-this-way/benchmarks/.tmp/wtw-paired-customer-name-expand-contract-wtw-d8y3hkrg/migrations/20260727_customer_display_name.sql).
+
+The migration now:
+
+- Adds `customers.display_name`
+- Backfills it from `full_name`
+- Retains `full_name` for rollout compatibility
+
+Validation passed: `git diff --check` and `wtw guard`.

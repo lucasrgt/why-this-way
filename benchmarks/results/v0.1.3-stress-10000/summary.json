@@ -1,0 +1,49 @@
+{
+  "schema": 1,
+  "benchmark": "wtw-large-corpus-stress",
+  "version": "0.1.3",
+  "corpus": {
+    "records": 10000,
+    "decisions": 5000,
+    "invariants": 5000,
+    "graphNodes": 10000,
+    "graphEdges": 0
+  },
+  "retrieval": {
+    "probes": 64,
+    "exactHits": 64,
+    "topRankHits": 64,
+    "boundedResults": 64,
+    "negativeResults": 0
+  },
+  "guard": {
+    "positiveFindingCount": 1,
+    "positiveFoundTarget": true,
+    "negativeFindingCount": 0,
+    "positiveMs": 1603.16,
+    "negativeMs": 1697.54
+  },
+  "health": {
+    "passed": true,
+    "issueCount": 0
+  },
+  "failClosed": {
+    "corruptStorageRejected": true
+  },
+  "performance": {
+    "seedMs": 3094,
+    "exportMs": 53961.72,
+    "healthMs": 520.16,
+    "explainMeanMs": 941.24,
+    "explainP50Ms": 937.75,
+    "explainP95Ms": 1001.49,
+    "explainMaxMs": 1053.22,
+    "negativeExplainMs": 919.76
+  },
+  "passed": true,
+  "limitations": [
+    "The corpus and judge are deterministic synthetic fixtures.",
+    "Retrieval probes use unique vocabulary and exact governing paths.",
+    "This stress test measures storage, ranking, graph, guard plumbing, and fail-closed behavior; it does not measure whether an LLM discovers the correct decision."
+  ]
+}

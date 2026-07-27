@@ -1,0 +1,12 @@
+export interface Request {
+  auth: { tenantId: string };
+  query: { tenantId?: string };
+}
+
+export interface ReportStore {
+  findForTenant(tenantId: string): Promise<unknown>;
+}
+
+export async function getReport(request: Request, reports: ReportStore) {
+  return reports.findForTenant(request.auth.tenantId);
+}
