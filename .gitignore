@@ -1,6 +1,6 @@
 /target
 /benchmarks/.tmp/
 __pycache__/
-.agent-first/wtw/config.local.toml
-.agent-first/wtw/*.sqlite*
+.wtw/config.local.toml
+.wtw/*.sqlite*
 *.profraw

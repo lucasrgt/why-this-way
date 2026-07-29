@@ -12,7 +12,7 @@ fn init_collect_retrieve_and_export_form_one_versioned_graph() {
     let repo = Repo::bare();
     wtw::init(&repo.root, &[PathBuf::from("AGENTS.md")]).unwrap();
     wtw::init(&repo.root, &[PathBuf::from("AGENTS.md")]).unwrap();
-    assert!(repo.root.join(".agent-first/wtw/records/decisions").is_dir());
+    assert!(repo.root.join(".wtw/records/decisions").is_dir());
     assert_eq!(
         fs::read_to_string(repo.root.join("AGENTS.md"))
             .unwrap()
@@ -28,7 +28,7 @@ fn init_collect_retrieve_and_export_form_one_versioned_graph() {
 
     let decision = show(&repo.root, "direct-appdb").unwrap();
     assert_eq!(decision.kind, RecordKind::Decision);
-    let stored = fs::read_to_string(repo.root.join(".agent-first/wtw/records/decisions/direct-appdb.toml")).unwrap();
+    let stored = fs::read_to_string(repo.root.join(".wtw/records/decisions/direct-appdb.toml")).unwrap();
     assert!(stored.contains("[[links]]") && stored.contains("rel = \"upholds\""));
 
     let context = explain(&repo.root, "change backend persistence", &["src/backend/orders.rs".into()], 12, &[]).unwrap();
@@ -36,6 +36,24 @@ fn init_collect_retrieve_and_export_form_one_versioned_graph() {
     assert_eq!(context.edges.len(), 1);
     let graph = export_graph(&repo.root).unwrap();
     assert_eq!((graph.nodes.len(), graph.edges.len()), (2, 1));
+}
+
+#[test]
+fn init_migrates_the_legacy_layout_without_losing_records() {
+    let repo = Repo::bare();
+    let legacy = repo.root.join(".agent-first/wtw");
+    fs::create_dir_all(legacy.join("records/decisions")).unwrap();
+    fs::create_dir_all(legacy.join("records/invariants")).unwrap();
+    fs::write(legacy.join("records/decisions/direct-appdb.toml"), "durable decision").unwrap();
+
+    wtw::init(&repo.root, &[PathBuf::from("AGENTS.md")]).unwrap();
+
+    assert!(!repo.root.join(".agent-first").exists());
+    assert_eq!(
+        fs::read_to_string(repo.root.join(".wtw/records/decisions/direct-appdb.toml")).unwrap(),
+        "durable decision"
+    );
+    assert!(repo.root.join(".wtw/records/invariants").is_dir());
 }
 
 #[test]
@@ -172,7 +190,7 @@ fn corrupt_storage_and_unsafe_inputs_fail_closed() {
     assert!(explain(&repo.root, "", &[], 12, &[]).is_err());
     assert!(explain(&repo.root, "task", &[], 0, &[]).is_err());
     assert!(guard(&repo.root, "task", "--bad", &[], &[], false).is_err());
-    repo.write(".agent-first/wtw/records/invariants/broken.toml", "schema = 99\n");
+    repo.write(".wtw/records/invariants/broken.toml", "schema = 99\n");
     assert!(export_graph(&repo.root).is_err());
 }
 
@@ -337,7 +355,7 @@ fn guard_short_circuits_clean_work_and_rejects_invalid_findings_and_runner_confi
     repo.configure_same(&[], &[invalid]);
     assert!(guard(&repo.root, "persistence", "HEAD", &["src/backend/handler.rs".into()], &[], false).is_err());
 
-    repo.write(".agent-first/wtw/config.local.toml", "schema = 1\n[judge]\ncommand = []\n");
+    repo.write(".wtw/config.local.toml", "schema = 1\n[judge]\ncommand = []\n");
     assert!(
         guard(&repo.root, "persistence", "HEAD", &[], &[], false)
             .unwrap_err()
@@ -355,7 +373,7 @@ fn supersession_rejects_self_and_cross_kind_and_retired_records_export() {
     assert!(supersede(&repo.root, "one", "one", "self").is_err());
     assert!(supersede(&repo.root, "rule", "one", "cross kind").is_err());
 
-    let path = repo.root.join(".agent-first/wtw/records/invariants/rule.toml");
+    let path = repo.root.join(".wtw/records/invariants/rule.toml");
     let current = fs::read_to_string(&path)
         .unwrap()
         .replace("status = \"active\"", "status = \"retired\"");

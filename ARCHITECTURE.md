@@ -24,17 +24,16 @@ literal quote, two literal evidence fragments, provenance, and status.
 Consumer repositories commit:
 
 ```text
-.agent-first/
-└── wtw/
-    ├── SKILL.md
-    └── records/
-        ├── decisions/
-        │   └── <semantic-id>.toml
-        └── invariants/
-            └── <semantic-id>.toml
+.wtw/
+├── SKILL.md
+└── records/
+    ├── decisions/
+    │   └── <semantic-id>.toml
+    └── invariants/
+        └── <semantic-id>.toml
 ```
 
-`.agent-first/wtw/config.local.toml` selects a local judge and is ignored.
+`.wtw/config.local.toml` selects a local judge and is ignored.
 TOML is authoritative. There is no database in version 0.1.
 
 Each semantic relation is one TOML array-of-table entry:
@@ -52,7 +51,7 @@ WTW records own only active-voice local edges: `establishes`, `upholds`, and
 ## Collection
 
 The host supplies a task, authoritative source files, and the current Git
-diff. Internal `.agent-first/**` files are excluded.
+diff. Internal `.wtw/**` files are excluded.
 
 The first isolated judge extracts at most 24 candidates. Deterministic
 validation enforces:

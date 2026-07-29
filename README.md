@@ -28,9 +28,9 @@ Initialize a Git repository:
 wtw init
 ```
 
-This creates `.agent-first/wtw`, installs the managed agent instructions, and
+This creates `.wtw`, installs the managed agent instructions, and
 creates an ignored local judge configuration using Codex. Edit
-`.agent-first/wtw/config.local.toml` to use any command that reads one prompt
+`.wtw/config.local.toml` to use any command that reads one prompt
 from stdin and writes the requested JSON to stdout.
 
 ## Daily protocol

@@ -32,7 +32,7 @@ passes.
 5. Graph JSON is a derived federation protocol, never unique knowledge.
 6. CLI and MCP call the same Rust operations.
 7. Judge, authority, relation, storage, and protocol failures fail closed.
-8. `.agent-first/**` never enters WTW's own collection or guard envelope.
+8. `.wtw/**` never enters WTW's own collection or guard envelope.
 
 The larger line budget than the single-concept sibling tools is intentional:
 WTW owns two independently validated record shapes plus the suite graph

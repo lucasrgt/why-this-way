@@ -9,7 +9,8 @@ use std::{collections::{BTreeMap, HashMap, HashSet}, ffi::OsString, fs, io::{sel
 use tempfile::tempdir;
 use ulid::Ulid;
 
-const ROOT: &str = ".agent-first/wtw";
+const ROOT: &str = ".wtw";
+const LEGACY_ROOT: &str = ".agent-first/wtw";
 const SKILL: &str = include_str!("../assets/why-this-way/SKILL.md");
 const CONFIG: &str = include_str!("../assets/config.toml");
 const IGNORE: &str = include_str!("../assets/gitignore");
@@ -20,37 +21,23 @@ const MAX_PROMPT: usize = 800_000;
 
 #[derive(Clone, Copy, Debug, Deserialize, Serialize, PartialEq, Eq, Hash)]
 #[serde(rename_all = "snake_case")]
-pub enum RecordKind {
-    Decision,
-    Invariant,
-}
+#[rustfmt::skip]
+pub enum RecordKind { Decision, Invariant }
 
 #[derive(Clone, Copy, Debug, Deserialize, Serialize, PartialEq, Eq)]
 #[serde(rename_all = "snake_case")]
-pub enum RecordStatus {
-    Active,
-    Superseded,
-    Retired,
-}
+#[rustfmt::skip]
+pub enum RecordStatus { Active, Superseded, Retired }
 
 #[derive(Clone, Copy, Debug, Deserialize, Serialize, PartialEq, Eq, Hash, PartialOrd, Ord)]
 #[serde(rename_all = "snake_case")]
-pub enum Relation {
-    Establishes,
-    Upholds,
-    Supersedes,
-}
+#[rustfmt::skip]
+pub enum Relation { Establishes, Upholds, Supersedes }
 
 #[derive(Clone, Copy, Debug, Deserialize, Serialize, PartialEq, Eq)]
 #[serde(rename_all = "snake_case")]
-pub enum AuthorityKind {
-    HumanStatement,
-    AcceptedPlan,
-    Adr,
-    Policy,
-    Contract,
-    MergedChange,
-}
+#[rustfmt::skip]
+pub enum AuthorityKind { HumanStatement, AcceptedPlan, Adr, Policy, Contract, MergedChange }
 
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
 #[serde(deny_unknown_fields)]
@@ -128,25 +115,20 @@ pub struct CollectResult { pub candidates_found: usize, pub duplicates: usize, p
 
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
-struct Config {
-    schema: u8,
-    judge: Judge,
-}
+#[rustfmt::skip]
+struct Config { schema: u8, judge: Judge }
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
-struct Judge {
-    command: Vec<String>,
-}
+#[rustfmt::skip]
+struct Judge { command: Vec<String> }
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
-struct Extraction {
-    records: Vec<Candidate>,
-}
+#[rustfmt::skip]
+struct Extraction { records: Vec<Candidate> }
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
-struct Audit {
-    findings: Vec<Finding>,
-}
+#[rustfmt::skip]
+struct Audit { findings: Vec<Finding> }
 
 impl Record {
     pub fn uri(&self) -> String {
@@ -158,8 +140,28 @@ pub fn repository(path: &Path) -> Result<PathBuf> {
     fs::canonicalize(git(path, &["rev-parse", "--show-toplevel"])?.trim()).context("resolve repository root")
 }
 
+fn migrate_legacy_root(root: &Path) -> Result<()> {
+    let legacy = root.join(LEGACY_ROOT);
+    if !legacy.exists() {
+        return Ok(());
+    }
+
+    let current = root.join(ROOT);
+    if current.exists() {
+        bail!("both {LEGACY_ROOT} and {ROOT} exist; merge the durable WTW records before retrying");
+    }
+
+    fs::rename(&legacy, &current).with_context(|| format!("migrate {LEGACY_ROOT} to {ROOT}"))?;
+    let legacy_parent = root.join(".agent-first");
+    if legacy_parent.is_dir() && legacy_parent.read_dir()?.next().is_none() {
+        fs::remove_dir(legacy_parent)?;
+    }
+    Ok(())
+}
+
 pub fn init(root: &Path, agent_files: &[PathBuf]) -> Result<()> {
     let root = repository(root)?;
+    migrate_legacy_root(&root)?;
     fs::create_dir_all(root.join(format!("{ROOT}/records/decisions")))?;
     fs::create_dir_all(root.join(format!("{ROOT}/records/invariants")))?;
     write_new(root.join(format!("{ROOT}/config.local.toml")), CONFIG)?;
@@ -745,14 +747,14 @@ fn parse_wtw_uri(uri: &str) -> Result<(RecordKind, &str)> {
 }
 
 fn changed_paths(root: &Path, base: &str) -> Result<Vec<String>> {
-    let mut paths = git(root, &["diff", "--name-only", base, "--", ".", ":(exclude).agent-first/**"])?
+    let mut paths = git(root, &["diff", "--name-only", base, "--", ".", ":(exclude).wtw/**"])?
         .lines()
         .map(str::to_owned)
         .collect::<Vec<_>>();
     paths.extend(
         git(
             root,
-            &["ls-files", "--others", "--exclude-standard", "--", ".", ":(exclude).agent-first/**"],
+            &["ls-files", "--others", "--exclude-standard", "--", ".", ":(exclude).wtw/**"],
         )?
         .lines()
         .map(str::to_owned),
@@ -763,11 +765,11 @@ fn changed_paths(root: &Path, base: &str) -> Result<Vec<String>> {
 fn diff(root: &Path, base: &str) -> Result<String> {
     let mut value = git(
         root,
-        &["diff", "--no-ext-diff", "--unified=3", base, "--", ".", ":(exclude).agent-first/**"],
+        &["diff", "--no-ext-diff", "--unified=3", base, "--", ".", ":(exclude).wtw/**"],
     )?;
     for path in git(
         root,
-        &["ls-files", "--others", "--exclude-standard", "--", ".", ":(exclude).agent-first/**"],
+        &["ls-files", "--others", "--exclude-standard", "--", ".", ":(exclude).wtw/**"],
     )?
     .lines()
     {
@@ -1049,7 +1051,7 @@ fn read_sources(root: &Path, paths: &[PathBuf]) -> Result<Vec<Source>> {
         .iter()
         .map(|path| {
             safe_relative(path)?;
-            if path.starts_with(".agent-first") {
+            if path.starts_with(".wtw") {
                 bail!("WTW internal files cannot be collection sources")
             }
             Ok(Source {

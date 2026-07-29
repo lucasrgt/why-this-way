@@ -1,6 +1,6 @@
 [package]
 name = "why-this-way"
-version = "0.1.4"
+version = "0.1.5"
 edition = "2024"
 description = "Repository-local decisions and invariants for coding agents"
 repository = "https://github.com/lucasrgt/why-this-way"

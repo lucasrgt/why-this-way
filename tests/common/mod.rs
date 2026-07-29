@@ -97,7 +97,7 @@ fn main() {{
         );
         let quoted = serde_json::to_string(&binary.to_string_lossy()).unwrap();
         fs::write(
-            self.root.join(".agent-first/wtw/config.local.toml"),
+            self.root.join(".wtw/config.local.toml"),
             format!("schema = 1\n[judge]\ncommand = [{quoted}]\n"),
         )
         .unwrap();

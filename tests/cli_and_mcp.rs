@@ -129,7 +129,7 @@ fn packaged_entrypoint_reaches_the_shared_cli() {
 fn cli_initializes_supersedes_and_reads_federated_graph_files() {
     let bare = Repo::bare();
     assert_eq!(cli(&bare, &["wtw", "init"]).unwrap().0, 0);
-    assert!(bare.root.join(".agent-first/wtw/SKILL.md").is_file());
+    assert!(bare.root.join(".wtw/SKILL.md").is_file());
 
     let repo = Repo::initialized();
     repo.configure_same(&[decision("old-way"), decision("new-way")], &[]);
@@ -158,13 +158,7 @@ fn cli_initializes_supersedes_and_reads_federated_graph_files() {
     assert_eq!(cli(&repo, &["wtw", "health", "--graph", "graph.json", "--json"]).unwrap().0, 0);
     repo.write("bad-graph.json", r#"{"schema":2,"nodes":[],"edges":[]}"#);
     assert!(cli(&repo, &["wtw", "health", "--graph", "bad-graph.json"]).is_err());
-    assert!(
-        cli(
-            &repo,
-            &["wtw", "collect", "--task", "bad source", "--source", ".agent-first/wtw/SKILL.md",],
-        )
-        .is_err()
-    );
+    assert!(cli(&repo, &["wtw", "collect", "--task", "bad source", "--source", ".wtw/SKILL.md",],).is_err());
     assert_eq!(cli(&repo, &["wtw", "--help"]).unwrap().0, 0);
     assert!(cli(&repo, &["wtw", "unknown-command"]).is_err());
 }

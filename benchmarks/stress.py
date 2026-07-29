@@ -94,8 +94,8 @@ def seed_repository(root: Path, binary: Path, count: int) -> None:
     (root / "src" / "baseline.txt").write_text("baseline\n", encoding="utf-8")
     run([str(binary), "init"], root)
 
-    decisions = root / ".agent-first" / "wtw" / "records" / "decisions"
-    invariants = root / ".agent-first" / "wtw" / "records" / "invariants"
+    decisions = root / ".wtw" / "records" / "decisions"
+    invariants = root / ".wtw" / "records" / "invariants"
     started = time.perf_counter()
     for index in range(count):
         folder = decisions if index % 2 == 0 else invariants
@@ -134,7 +134,7 @@ def percentile(values: list[float], fraction: float) -> float:
 
 def configure_judge(root: Path, target_index: int) -> None:
     python = Path(sys.executable).resolve()
-    script = root / ".agent-first" / "wtw" / "benchmark-judge.py"
+    script = root / ".wtw" / "benchmark-judge.py"
     identifier = f"domain-policy-{target_index:05d}"
     domain = f"domain-{target_index:05d}"
     evidence = f"bypass token-{target_index:05d}"
@@ -158,7 +158,7 @@ def configure_judge(root: Path, target_index: int) -> None:
         encoding="utf-8",
     )
     command = ", ".join((toml_string(str(python)), toml_string(str(script))))
-    (root / ".agent-first" / "wtw" / "config.local.toml").write_text(
+    (root / ".wtw" / "config.local.toml").write_text(
         f"schema = 1\n[judge]\ncommand = [{command}]\n",
         encoding="utf-8",
     )
@@ -224,8 +224,7 @@ def guard_checks(root: Path, binary: Path, target_index: int) -> dict[str, Any]:
 def corrupt_storage_fails_closed(root: Path, binary: Path) -> bool:
     corrupt = (
         root
-        / ".agent-first"
-        / "wtw"
+        / ".wtw"
         / "records"
         / "invariants"
         / "corrupt-benchmark-record.toml"

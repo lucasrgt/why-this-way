@@ -292,8 +292,7 @@ def initialize_repository(root: Path, case: Case, binary: Path, with_wtw: bool) 
         command([str(binary), "init"], root)
         records = (
             root
-            / ".agent-first"
-            / "wtw"
+            / ".wtw"
             / "records"
             / ("decisions" if case.kind == "decision" else "invariants")
         )
@@ -301,7 +300,7 @@ def initialize_repository(root: Path, case: Case, binary: Path, with_wtw: bool) 
             record_text(case),
             encoding="utf-8",
         )
-        judge = root / ".agent-first" / "wtw" / "benchmark-judge.py"
+        judge = root / ".wtw" / "benchmark-judge.py"
         judge.write_text(
             "import sys\nsys.stdin.read()\nprint('{\"findings\":[]}')\n",
             encoding="utf-8",
@@ -309,7 +308,7 @@ def initialize_repository(root: Path, case: Case, binary: Path, with_wtw: bool) 
         judge_command = ", ".join(
             (toml_string(str(Path(sys.executable).resolve())), toml_string(str(judge)))
         )
-        (root / ".agent-first" / "wtw" / "config.local.toml").write_text(
+        (root / ".wtw" / "config.local.toml").write_text(
             f"schema = 1\n[judge]\ncommand = [{judge_command}]\n",
             encoding="utf-8",
         )

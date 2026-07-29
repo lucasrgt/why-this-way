@@ -1,7 +1,7 @@
 # Security
 
 Why This Way executes the local judge command selected by the repository user.
-Treat `.agent-first/wtw/config.local.toml` as executable configuration and
+Treat `.wtw/config.local.toml` as executable configuration and
 never commit credentials there.
 
 WTW sends the configured judge only the bounded collection or guard envelope.
