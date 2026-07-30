@@ -140,6 +140,11 @@ pub fn repository(path: &Path) -> Result<PathBuf> {
     fs::canonicalize(git(path, &["rev-parse", "--show-toplevel"])?.trim()).context("resolve repository root")
 }
 
+#[rustfmt::skip]
+fn data_dir(root: &Path) -> PathBuf { match std::env::var_os("CSM_STORAGE_ROOT") { Some(path) => { let path = PathBuf::from(path); let path = if path.is_absolute() { path } else { root.join(path) }; path.join("wtw") }, None => root.join(ROOT) } }
+
+#[rustfmt::skip]
+fn store_exclude(root: &Path) -> String { let relative = data_dir(root).strip_prefix(root).ok().map(|path| path.to_string_lossy().replace('\\', "/")).unwrap_or_else(|| "__csm_external_store__".into()); format!(":(exclude){relative}/**") }
 fn migrate_legacy_root(root: &Path) -> Result<()> {
     let legacy = root.join(LEGACY_ROOT);
     if !legacy.exists() {
@@ -159,20 +164,8 @@ fn migrate_legacy_root(root: &Path) -> Result<()> {
     Ok(())
 }
 
-pub fn init(root: &Path, agent_files: &[PathBuf]) -> Result<()> {
-    let root = repository(root)?;
-    migrate_legacy_root(&root)?;
-    fs::create_dir_all(root.join(format!("{ROOT}/records/decisions")))?;
-    fs::create_dir_all(root.join(format!("{ROOT}/records/invariants")))?;
-    write_new(root.join(format!("{ROOT}/config.local.toml")), CONFIG)?;
-    fs::write(root.join(format!("{ROOT}/SKILL.md")), SKILL)?;
-    append_once(root.join(".gitignore"), IGNORE)?;
-    for file in agent_files {
-        safe_relative(file)?;
-        upsert_block(root.join(file), INSTRUCTIONS)?;
-    }
-    Ok(())
-}
+#[rustfmt::skip]
+pub fn init(root: &Path, agent_files: &[PathBuf]) -> Result<()> { let root = repository(root)?; let managed = std::env::var_os("CSM_STORAGE_ROOT").is_some(); if !managed { migrate_legacy_root(&root)?; } let data = data_dir(&root); for directory in ["decisions", "invariants"] { fs::create_dir_all(data.join(format!("records/{directory}")))?; } write_new(data.join("config.local.toml"), CONFIG)?; fs::write(data.join("SKILL.md"), SKILL)?; if !managed { append_once(root.join(".gitignore"), IGNORE)?; for file in agent_files { safe_relative(file)?; upsert_block(root.join(file), INSTRUCTIONS)?; } } Ok(()) }
 
 pub fn collect(root: &Path, request: CollectRequest) -> Result<CollectResult> {
     let root = repository(root)?;
@@ -550,7 +543,7 @@ fn semantic(record: &Record) -> Candidate {
 }
 
 fn load(root: &Path) -> Result<Vec<Record>> {
-    let directory = root.join(format!("{ROOT}/records"));
+    let directory = data_dir(root).join("records");
     if !directory.exists() {
         bail!("Why This Way is not initialized; run wtw init")
     }
@@ -610,7 +603,7 @@ fn write_record(root: &Path, record: &Record) -> Result<()> {
         "invariants"
     };
     atomic(
-        &root.join(format!("{ROOT}/records/{directory}/{}.toml", record.id)),
+        &data_dir(root).join(format!("records/{directory}/{}.toml", record.id)),
         &toml::to_string_pretty(record)?,
     )
 }
@@ -691,8 +684,8 @@ fn judge<T: serde::de::DeserializeOwned>(root: &Path, prompt: &str) -> Result<T>
 fn load_config(root: &Path) -> Result<Config> {
     let user = dirs::config_dir().map(|p| p.join("why-this-way/config.toml"));
     let path = [
-        Some(root.join(format!("{ROOT}/config.local.toml"))),
-        Some(root.join(format!("{ROOT}/config.toml"))),
+        Some(data_dir(root).join("config.local.toml")),
+        Some(data_dir(root).join("config.toml")),
         user,
     ]
     .into_iter()
@@ -747,32 +740,23 @@ fn parse_wtw_uri(uri: &str) -> Result<(RecordKind, &str)> {
 }
 
 fn changed_paths(root: &Path, base: &str) -> Result<Vec<String>> {
-    let mut paths = git(root, &["diff", "--name-only", base, "--", ".", ":(exclude).wtw/**"])?
+    let exclude = store_exclude(root);
+    let mut paths = git(root, &["diff", "--name-only", base, "--", ".", &exclude])?
         .lines()
         .map(str::to_owned)
         .collect::<Vec<_>>();
     paths.extend(
-        git(
-            root,
-            &["ls-files", "--others", "--exclude-standard", "--", ".", ":(exclude).wtw/**"],
-        )?
-        .lines()
-        .map(str::to_owned),
+        git(root, &["ls-files", "--others", "--exclude-standard", "--", ".", &exclude])?
+            .lines()
+            .map(str::to_owned),
     );
     Ok(normalized(paths))
 }
 
 fn diff(root: &Path, base: &str) -> Result<String> {
-    let mut value = git(
-        root,
-        &["diff", "--no-ext-diff", "--unified=3", base, "--", ".", ":(exclude).wtw/**"],
-    )?;
-    for path in git(
-        root,
-        &["ls-files", "--others", "--exclude-standard", "--", ".", ":(exclude).wtw/**"],
-    )?
-    .lines()
-    {
+    let exclude = store_exclude(root);
+    let mut value = git(root, &["diff", "--no-ext-diff", "--unified=3", base, "--", ".", &exclude])?;
+    for path in git(root, &["ls-files", "--others", "--exclude-standard", "--", ".", &exclude])?.lines() {
         let contents = fs::read_to_string(root.join(path)).with_context(|| format!("untracked file is not auditable text: {path}"))?;
         value.push_str(&format!("\ndiff --git a/{path} b/{path}\n--- /dev/null\n+++ b/{path}\n"));
         for line in contents.lines() {
@@ -1047,11 +1031,12 @@ pub fn run_cli_at(arguments: Vec<OsString>, current: &Path, input: &mut dyn BufR
 }
 
 fn read_sources(root: &Path, paths: &[PathBuf]) -> Result<Vec<Source>> {
+    let internal = data_dir(root).strip_prefix(root).ok().map(Path::to_path_buf);
     paths
         .iter()
         .map(|path| {
             safe_relative(path)?;
-            if path.starts_with(".wtw") {
+            if internal.as_ref().is_some_and(|directory| path.starts_with(directory)) {
                 bail!("WTW internal files cannot be collection sources")
             }
             Ok(Source {

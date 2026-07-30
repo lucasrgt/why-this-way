@@ -2,7 +2,7 @@ mod common;
 
 use common::*;
 use serde_json::{Value, json};
-use std::{ffi::OsString, io::Cursor, process::Command};
+use std::{ffi::OsString, fs, io::Cursor, process::Command};
 
 fn args(values: &[&str]) -> Vec<OsString> {
     values.iter().map(OsString::from).collect()
@@ -12,6 +12,24 @@ fn cli(repo: &Repo, values: &[&str]) -> anyhow::Result<(i32, String)> {
     let mut output = Vec::new();
     let code = wtw::run_cli_at(args(values), &repo.root, &mut Cursor::new(Vec::<u8>::new()), &mut output)?;
     Ok((code, String::from_utf8(output).unwrap()))
+}
+
+#[test]
+fn csm_storage_is_opt_in_and_does_not_rewrite_root_files() {
+    let repo = Repo::bare();
+    let agents = fs::read_to_string(repo.root.join("AGENTS.md")).unwrap();
+    let output = Command::new(env!("CARGO_BIN_EXE_wtw"))
+        .current_dir(&repo.root)
+        .env("CSM_STORAGE_ROOT", ".csm")
+        .arg("init")
+        .output()
+        .unwrap();
+
+    assert!(output.status.success());
+    assert!(repo.root.join(".csm/wtw/records/decisions").is_dir());
+    assert!(!repo.root.join(".wtw").exists());
+    assert_eq!(fs::read_to_string(repo.root.join("AGENTS.md")).unwrap(), agents);
+    assert!(!repo.root.join(".gitignore").exists());
 }
 
 #[test]
