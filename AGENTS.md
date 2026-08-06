@@ -44,3 +44,16 @@ Prefer the smallest complete implementation. New record kinds, relation verbs,
 judge authority classes, and graph schema changes are public protocol changes.
 
 Before reporting implementation complete, run `cargo xtask verify`.
+
+
+## Optional Prime Agent adapter
+
+`integrations/prime-agent` is a thin optional host adapter. It may invoke only
+the `wtw` CLI with literal argv and must never parse semantic records or
+reimplement Rust behavior. It activates only for `.wtw/SKILL.md` and
+must remain completely inactive when the Git root contains `csm.toml`. CSM has
+absolute Prime-integration precedence.
+
+When changing the adapter, run `npm ci`, `npm test`, `npm run typecheck`, and
+`npm pack --dry-run` from `integrations/prime-agent` in addition to
+`cargo xtask verify`.

@@ -20,6 +20,24 @@ jobs:
         with:
           tool: cargo-llvm-cov,tokei
       - run: cargo xtask verify
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: integrations/prime-agent/package-lock.json
+      - run: npm ci
+        working-directory: integrations/prime-agent
+      - run: npm test
+        working-directory: integrations/prime-agent
+      - run: npm run typecheck
+        working-directory: integrations/prime-agent
+      - run: npm pack --dry-run
+        working-directory: integrations/prime-agent
+      - name: Check package and tag versions
+        shell: bash
+        run: |
+          package_version="$(node -p "require('./integrations/prime-agent/package.json').version")"
+          test "$package_version" = "${GITHUB_REF_NAME#v}"
 
   build:
     needs: quality
@@ -74,6 +92,12 @@ jobs:
           New-Item -ItemType Directory -Path "dist/$name" | Out-Null
           Copy-Item "target/${{ matrix.target }}/release/wtw${{ matrix.suffix }}" "dist/$name/"
           Copy-Item README.md, LICENSE "dist/$name/"
+          New-Item -ItemType Directory -Path "dist/$name/docs" | Out-Null
+          Copy-Item "docs/prime-agent.md" "dist/$name/docs/"
+          Copy-Item -Recurse "integrations/prime-agent" "dist/$name/prime-agent"
+          if (-not (Test-Path "dist/$name/docs/prime-agent.md") -or -not (Test-Path "dist/$name/prime-agent/package.json") -or -not (Test-Path "dist/$name/prime-agent/skills/wtw/SKILL.md")) {
+            throw "Prime Agent package is incomplete"
+          }
           Compress-Archive -Path "dist/$name" -DestinationPath "dist/$name.zip"
       - uses: actions/upload-artifact@v7
         with:

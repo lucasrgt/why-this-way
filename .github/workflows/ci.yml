@@ -19,6 +19,19 @@ jobs:
         with:
           tool: cargo-llvm-cov,tokei
       - run: cargo xtask verify
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: integrations/prime-agent/package-lock.json
+      - run: npm ci
+        working-directory: integrations/prime-agent
+      - run: npm test
+        working-directory: integrations/prime-agent
+      - run: npm run typecheck
+        working-directory: integrations/prime-agent
+      - run: npm pack --dry-run
+        working-directory: integrations/prime-agent
 
   platform:
     name: ${{ matrix.name }}

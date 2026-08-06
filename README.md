@@ -175,6 +175,16 @@ Tools:
 
 All call the same core operations as the CLI.
 
+
+## Prime Agent
+
+The optional package at `integrations/prime-agent` provides bounded automatic
+`explain`, explicit `/wtw` checks, and a conditional model skill for
+repositories already adopted through `.wtw/SKILL.md`. A root
+`csm.toml` has precedence and suppresses this standalone adapter to prevent
+duplicate retrieval and verification. It never initializes the repository or
+writes semantic records. See the [Prime Agent guide](docs/prime-agent.md).
+
 ## Verification
 
 ```bash
